@@ -44,34 +44,100 @@ myApp.onPageInit('about', function (page) {
 
 /* FEEDS  */
 
-// var feed = "http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/feed/";
-// ajax(feed, {
-//   dataType: "xml",
-//   success: cargarNoticias
-// });
+var portfolioRest = 'http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/wp-json/wp/v2/portfolio';
 
-
-var feed = "http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/feed/";
-$.ajax(feed, {
-  dataType: "text",
-  success: traerRSS
+$$.ajax({
+ url: portfolioRest,
+ type: "GET",
+ contentType: "application/json",
+ success: portfolioJson,
+ statusCode: {
+  201: success201,
+  400: notsuccess,
+  500: notsuccess
+ }
 });
 
+function portfolioJson(data){
+    var obj = JSON.parse(data);
+    var basePortfolio = [];
 
-function traerRSS(data) {
-  var maximo = 5;
-  var items = $(data).find("item");
-  
-  for (var index=0; index < items.length && index <= maximo; index++) {
-  
-         var el = $(items[index]);
-         var imagen = el.find("imagen").text();     
-         var titulo = el.find("title").text();    
-         var descripcion = el.find("contenido").text();
-         var tipoPost = el.find("tipopost").text();
-         console.log(tipoPost);
+    for (var index=0; index < obj.length; index++) {
+       var post_id = obj[index].id; 
+       var post_modificado = obj[index].modified; 
+       var post_contenido = obj[index].content['rendered']; 
+       var post_titulo = obj[index].title['rendered'];; 
 
-         $("#traer").append(descripcion);
-  }
-  
+       var newPortfolio = {};
+       newPortfolio['id_post'] = post_id;
+       newPortfolio['post_modificado'] = post_modificado;
+       newPortfolio['post_contenido'] = post_contenido;
+       newPortfolio['post_titulo'] = post_titulo;
+       var mediaposts = [];
+       newPortfolio['post_media'] = mediaposts;
+       
+       
+              
+       var portfolioRestMedia = 'http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/wp-json/wp/v2/media?parent=';
+       
+       $$.ajax({
+           url: portfolioRestMedia+post_id,
+           type: "GET",
+           contentType: "application/json",
+           success: portfolioJsonMedios,
+           statusCode: {
+            201: success201,
+            400: notsuccess,
+            500: notsuccess
+          }
+          });
+       
+       function portfolioJsonMedios(data){
+           var obj2 = JSON.parse(data);
+           for (var index3=0; index3 < obj2.length; index3++) {
+              var post_media_id = obj2[index3].id; 
+              var post_media_modificado = obj2[index3].modified; 
+              var post_media_link = obj2[index3].guid['rendered']; 
+
+              var newMediaPortfolio = {};
+              newMediaPortfolio['id_media']= post_media_id;
+              newMediaPortfolio['post_media_id'] = post_media_id;
+              newMediaPortfolio['post_media_modificado'] = post_media_modificado;
+              newMediaPortfolio['post_media_link'] = post_media_link;
+             
+            //   mediaposts.push(newMediaPortfolio); 
+
+            
+              
+           }  
+           
+           mediaposts.push(newMediaPortfolio);
+           console.log(mediaposts);
+       }
+       basePortfolio.push(newPortfolio); 
+    }
+    
+    // console.log(basePortfolio);
 }
+
+
+
+
+var success201 = function(data, textStatus, jqXHR) {
+    // We have received response and can hide activity indicator
+    myApp.hideIndicator();
+    // Will pass context with retrieved user name
+    // to welcome page. Redirect to welcome page
+    mainView.router.load({
+    template: Template7.templates.welcomeTemplate,
+     context: {
+      name: username
+     }
+    });
+   };
+   
+   var notsuccess = function(data, textStatus, jqXHR) {
+    // We have received response and can hide activity indicator
+    myApp.hideIndicator();
+    myApp.alert('Login was unsuccessful, please try again');
+   };
