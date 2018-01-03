@@ -78,6 +78,7 @@ function portfolioJson(posts) {
         [] //este valor inicializa el acumulador como un array en cero
     );
     console.log(resultado);
+    document.getElementById("resultado").innerHTML = resultado[0].title;
 }
 
 function getMedia(post) {
