@@ -1,2 +1,0 @@
-# domo-test
-test app
