@@ -44,100 +44,94 @@ myApp.onPageInit('about', function (page) {
 
 /* FEEDS  */
 
-var portfolioRest = 'http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/wp-json/wp/v2/portfolio';
+let portfolioRest = 'http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/wp-json/wp/v2/portfolio';
 
-$$.ajax({
- url: portfolioRest,
- type: "GET",
- contentType: "application/json",
- success: portfolioJson,
- statusCode: {
-  201: success201,
-  400: notsuccess,
-  500: notsuccess
- }
+$.ajax({
+    url: portfolioRest,
+    type: "GET",
+    contentType: "application/json",
+    success: portfolioJson,
+    statusCode: {
+        201: success201,
+        400: notsuccess,
+        500: notsuccess
+    }
 });
 
-function portfolioJson(data){
-    var obj = JSON.parse(data);
-    var basePortfolio = [];
+function portfolioJson(posts) {
+    // convierte el resultado a json
+    // genera un nuevo array de objetos portfolio , tuneado
+    let resultado= posts.reduce(
+        function (acu, post) {
+            let postNew = {
+                'id': post.id,
+                'modified': post.modified,
+                'content': post.content.rendered,
+                'title': post.title.rendered
+            };
+            //obtiene la media de cada uno de los elementos
+            getMedia(postNew);
+            acu.push(postNew);
+            // TODO: LOAD MEDIA
+            return acu;
+        },
+        [] //este valor inicializa el acumulador como un array en cero
+    );
+    console.log(resultado);
+}
 
-    for (var index=0; index < obj.length; index++) {
-       var post_id = obj[index].id; 
-       var post_modificado = obj[index].modified; 
-       var post_contenido = obj[index].content['rendered']; 
-       var post_titulo = obj[index].title['rendered'];; 
-
-       var newPortfolio = {};
-       newPortfolio['id_post'] = post_id;
-       newPortfolio['post_modificado'] = post_modificado;
-       newPortfolio['post_contenido'] = post_contenido;
-       newPortfolio['post_titulo'] = post_titulo;
-       var mediaposts = [];
-       newPortfolio['post_media'] = mediaposts;
-       
-       
-              
-       var portfolioRestMedia = 'http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/wp-json/wp/v2/media?parent=';
-       
-       $$.ajax({
-           url: portfolioRestMedia+post_id,
-           type: "GET",
-           contentType: "application/json",
-           success: portfolioJsonMedios,
-           statusCode: {
+function getMedia(post) {
+    var portfolioRestMedia = 'http://clientes.domo.com.ar/DOMO/web/www_alfa/wordpress/wp-json/wp/v2/media?parent=' + post.id;
+    //inicializa una propiedad en el post llamada media como una array vacio
+    // la vamos a llenar con el resultado del get 
+    post.media=[];
+    $.ajax({
+        url: portfolioRestMedia,
+        type: "GET",
+        contentType: "application/json",
+        success: success,
+        statusCode: {
             201: success201,
             400: notsuccess,
             500: notsuccess
-          }
-          });
-       
-       function portfolioJsonMedios(data){
-           var obj2 = JSON.parse(data);
-           for (var index3=0; index3 < obj2.length; index3++) {
-              var post_media_id = obj2[index3].id; 
-              var post_media_modificado = obj2[index3].modified; 
-              var post_media_link = obj2[index3].guid['rendered']; 
+        }
+    });
 
-              var newMediaPortfolio = {};
-              newMediaPortfolio['id_media']= post_media_id;
-              newMediaPortfolio['post_media_id'] = post_media_id;
-              newMediaPortfolio['post_media_modificado'] = post_media_modificado;
-              newMediaPortfolio['post_media_link'] = post_media_link;
-             
-            //   mediaposts.push(newMediaPortfolio); 
-
-            
-              
-           }  
-           
-           mediaposts.push(newMediaPortfolio);
-           console.log(mediaposts);
-       }
-       basePortfolio.push(newPortfolio); 
+    function success(medias) {
+        //obtiene el array de objetos
+        post.media = medias.reduce(
+            function (acu, media) {
+                let mediaNew = {
+                    'id': media.id,
+                    'modified': media.modified,
+                    'link': media.guid.rendered
+                };
+                acu.push(mediaNew);
+                // TODO: LOAD MEDIA
+                return acu;
+            },
+            []//este valor inicializa el acumulador como un array en cero
+        );
     }
-    
-    // console.log(basePortfolio);
 }
 
 
 
-
-var success201 = function(data, textStatus, jqXHR) {
+var success201 = function (data, textStatus, jqXHR) {
     // We have received response and can hide activity indicator
-    myApp.hideIndicator();
+    //myApp.hideIndicator();
     // Will pass context with retrieved user name
     // to welcome page. Redirect to welcome page
-    mainView.router.load({
-    template: Template7.templates.welcomeTemplate,
-     context: {
-      name: username
-     }
-    });
-   };
-   
-   var notsuccess = function(data, textStatus, jqXHR) {
+    //mainView.router.load({
+    //    template: Template7.templates.welcomeTemplate,
+    //    context: {
+    //        name: username
+    //    }
+    //});
+};
+
+var notsuccess = function (data, textStatus, jqXHR) {
     // We have received response and can hide activity indicator
-    myApp.hideIndicator();
-    myApp.alert('Login was unsuccessful, please try again');
-   };
+    //myApp.hideIndicator();
+    //myApp.alert('Login was unsuccessful, please try again');
+};
