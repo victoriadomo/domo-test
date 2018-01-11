@@ -77,8 +77,10 @@ function portfolioJson(posts) {
         },
         [] //este valor inicializa el acumulador como un array en cero
     );
-    console.log(resultado);
-    document.getElementById("resultado").innerHTML = resultado[0].title;
+    // console.log(resultado);
+    localStorage.setItem('base', JSON.stringify(resultado));
+
+    // document.getElementById("resultado").innerHTML = resultado[0].title;
 }
 
 function getMedia(post) {
@@ -116,8 +118,6 @@ function getMedia(post) {
     }
 }
 
-
-
 var success201 = function (data, textStatus, jqXHR) {
     // We have received response and can hide activity indicator
     //myApp.hideIndicator();
@@ -129,10 +129,31 @@ var success201 = function (data, textStatus, jqXHR) {
     //        name: username
     //    }
     //});
+    console.log("200");
 };
 
 var notsuccess = function (data, textStatus, jqXHR) {
     // We have received response and can hide activity indicator
     //myApp.hideIndicator();
     //myApp.alert('Login was unsuccessful, please try again');
+    console.log("error");
 };
+
+var traerBase = localStorage.getItem('base');
+var baseJson = JSON.parse(traerBase);
+
+// document.getElementById("resultado").innerHTML = baseJson.post.id;
+
+for(var i=0; i < baseJson.length; i++) {
+    // console.log(baseJson[i]);
+    document.getElementById("resultado").innerHTML += '<div class="swiper-slide"><div class="card">'
+                               +'<div class="card-header">'+baseJson[i].title+'</div>' 
+                               +' <div class="card-content card-content-padding publi-id-'+baseJson[i].id+'">'
+                               +'<img src="'+baseJson[i].media.link+'" alt="'+baseJson[i].title+'">'
+                               +baseJson[i].content.substr(0, 150)+"..."
+                               +' </div>'
+                               +' <div class="card-footer"><a href="#">Ver mas</a></div>'
+                               +' </div></div>';
+
+baseJson[i].id+"<br>";
+}

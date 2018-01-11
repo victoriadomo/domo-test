@@ -34,3 +34,12 @@
 .toolbar-inner a{
     color:black;
 }
+
+.card-content {
+    padding: 10px 15px;
+}
+
+a.link {
+    display: inline-block;
+    width: 100%;
+}
